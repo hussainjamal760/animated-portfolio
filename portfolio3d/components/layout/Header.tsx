@@ -1,120 +1,138 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-import { Menu, X } from "lucide-react";
-import { NAV_LINKS } from "@/constants";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { HiOutlineMenuAlt3, HiX } from "react-icons/hi";
+import { navItems } from "../../utils/navItems";
 
 const Header = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const { scrollY } = useScroll();
+  const [active, setActive] = useState(false);
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    if (latest > 100) {
-      setIsScrolled(true);
-    } else {
-      setIsScrolled(false);
-      setIsOpen(false);
-    }
-  });
+  useEffect(() => {
+    const handleScroll = () => setActive(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => { setOpen(false); }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 pointer-events-none">
-      <div className="container mx-auto px-6 md:px-12 py-8 flex justify-end">
-        <div className="pointer-events-auto w-full flex justify-center">
-          <AnimatePresence mode="wait">
-            {!isScrolled ? (
-              <motion.div
-                key="burger-only"
-                initial={{ opacity: 0, scale: 0.8, x: 20 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.8, x: 20 }}
-                className="w-full flex justify-between items-center"
+    <>
+      <div className="fixed top-0 left-0 w-full z-[999] px-4 md:px-6 py-4 flex justify-center pointer-events-none">
+        <header
+          className={`pointer-events-auto flex items-center justify-between px-5 py-3 rounded-full transition-all duration-700 
+          ${active
+            ? "w-full max-w-[1200px] bg-black/60 backdrop-blur-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+            : "w-full max-w-[1400px] bg-transparent"
+          }`}
+        >
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="relative w-9 h-9 bg-brand-primary rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,107,0,0.4)] transition-transform group-hover:scale-110">
+              <span className="text-black font-black text-lg">H</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-white font-black text-xl tracking-tighter leading-none">HOSTELITE</span>
+              <span className="text-brand-primary text-[10px] font-light italic tracking-[0.2em] mt-0.5">BEYOND ORDINARY</span>
+            </div>
+          </Link>
+
+          <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+            {navItems.map((item, index) => (
+              <Link
+                key={index}
+                href={item.url}
+                className={`text-[12px] uppercase tracking-[0.15em] font-bold transition-colors relative group
+                  ${pathname === item.url ? "text-brand-primary" : "text-white/70 hover:text-brand-primary"}`}
               >
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="text-xl font-bold text-white tracking-tighter"
-                >
-                  PORTFOLIO<span className="text-primary">.</span>
-                </motion.div>
-                <button
-                  onClick={() => setIsOpen(!isOpen)}
-                  className="p-4 bg-white/5 border border-white/10 rounded-full text-white hover:bg-white/10 transition-colors shadow-xl backdrop-blur-md"
-                >
-                  {isOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
-              </motion.div>
-            ) : (
-              <motion.nav
-                key="full-navbar"
-                initial={{ opacity: 0, y: -20, width: "60px" }}
-                animate={{ opacity: 1, y: 34, width: "80%" }}
-                exit={{ opacity: 0, y: -20, width: "60px" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="glass-dark rounded-[2rem] px-10 py-5 flex items-center justify-center border border-primary/40 shadow-[0_0_20px_rgba(58,190,249,0.1)] backdrop-blur-2xl"
-              >
-                <div className="flex items-center gap-16">
-                  {NAV_LINKS.map((link) => (
-                    <a
-                      key={link.label}
-                      href={link.href}
-                      className="text-sm font-medium text-white/80 hover:text-primary transition-all duration-300 tracking-widest uppercase"
-                    >
-                      {link.label}
-                    </a>
-                  ))}
-                  <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="p-2 text-white hover:bg-white/5 rounded-full transition-colors md:hidden"
-                  >
-                    <Menu size={20} />
-                  </button>
-                </div>
-              </motion.nav>
-            )}
-          </AnimatePresence>
-        </div>
+                {item.name}
+                <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-[2px] bg-brand-primary transition-all duration-300
+                  ${pathname === item.url ? "w-full" : "w-0 group-hover:w-full"}`} />
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-4">
+            <div className="hidden md:block">
+              <Link href="/login" className="px-5 py-2 rounded-full bg-white text-black text-[12px] font-bold uppercase tracking-wider transition-all hover:bg-brand-primary hover:text-black hover:scale-105">
+                Sign In
+              </Link>
+            </div>
+            <button
+              className="md:hidden text-white hover:text-brand-primary transition-colors p-1"
+              onClick={() => setOpen(!open)}
+              aria-label="Toggle menu"
+            >
+              {open ? <HiX size={26} /> : <HiOutlineMenuAlt3 size={26} />}
+            </button>
+          </div>
+        </header>
       </div>
 
-      <AnimatePresenceOutcome isOpen={isOpen} setIsOpen={setIsOpen} />
-    </header>
+      <div
+        className={`fixed inset-0 z-[998] md:hidden transition-all duration-300
+          ${open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        onClick={() => setOpen(false)}
+      >
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      </div>
+
+      <div
+        className={`fixed top-0 right-0 h-full w-[280px] z-[999] md:hidden bg-[#0a0a0a] border-l border-white/10
+          transition-transform duration-300 ease-in-out
+          ${open ? "translate-x-0" : "translate-x-full"}`}
+      >
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+          <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
+            <div className="w-8 h-8 bg-brand-primary rounded-full flex items-center justify-center shadow-[0_0_12px_rgba(255,107,0,0.4)]">
+              <span className="text-black font-black text-base">H</span>
+            </div>
+            <span className="text-white font-black text-lg tracking-tighter">HOSTELITE</span>
+          </Link>
+          <button onClick={() => setOpen(false)} className="text-white/60 hover:text-white transition-colors p-1" aria-label="Close menu">
+            <HiX size={22} />
+          </button>
+        </div>
+
+        <nav className="flex flex-col px-4 py-6 gap-1">
+          {navItems.map((item, index) => (
+            <Link
+              key={index}
+              href={item.url}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-[0.12em] transition-all duration-200
+                ${pathname === item.url
+                  ? "bg-brand-primary/15 text-brand-primary border border-brand-primary/30"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
+                }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${pathname === item.url ? "bg-brand-primary" : "bg-white/20"}`} />
+              {item.name}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="mx-6 border-t border-white/10" />
+
+        <div className="px-6 py-6">
+          <div className="flex flex-col gap-3">
+            <Link href="/login" className="w-full text-center py-3 rounded-xl bg-brand-primary text-black text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity" onClick={() => setOpen(false)}>
+              Sign In
+            </Link>
+            <Link href="/signup" className="w-full text-center py-3 rounded-xl border border-white/20 text-white text-sm font-bold uppercase tracking-wider hover:bg-white/5 transition-colors" onClick={() => setOpen(false)}>
+              Sign Up
+            </Link>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
-
-const AnimatePresenceOutcome = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolean) => void }) => (
-  <AnimatePresence>
-    {isOpen && (
-      <motion.div
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: 1, height: "100vh" }}
-        exit={{ opacity: 0, height: 0 }}
-        className="fixed inset-0 z-40 bg-black/95 backdrop-blur-2xl pointer-events-auto flex flex-col items-center justify-center gap-8"
-      >
-        <button 
-          onClick={() => setIsOpen(false)}
-          className="absolute top-10 right-10 p-4 text-white hover:bg-white/5 rounded-full transition-colors"
-        >
-          <X size={32} />
-        </button>
-        {NAV_LINKS.map((link, i) => (
-          <motion.a
-            key={link.label}
-            href={link.href}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            onClick={() => setIsOpen(false)}
-            className="text-4xl font-bold text-white hover:text-primary transition-colors tracking-tight"
-          >
-            {link.label}
-          </motion.a>
-        ))}
-      </motion.div>
-    )}
-  </AnimatePresence>
-);
 
 export default Header;
